@@ -18,26 +18,41 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sourcec0de/gvault/crypter"
 	"github.com/sourcec0de/gvault/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile     string
+	cfgFileName = ".gvaultrc"
+	rcFile      = fmt.Sprintf("%s.json", cfgFileName)
+)
+
+type rootCmdWithCrypter struct {
+	*cobra.Command
+	crypter *crypter.Crypter
+}
+
+func (r *rootCmdWithCrypter) initCrypter() error {
+	newCrypter, err := crypter.NewCrypter(viper.GetString("project"),
+		viper.GetString("location"), viper.GetString("keyring"), viper.GetString("key"))
+
+	if err != nil {
+		return err
+	}
+
+	r.crypter = newCrypter
+	return nil
+}
 
 // rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "gvault",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+var rootCmd = &rootCmdWithCrypter{
+	Command: &cobra.Command{
+		Use:   "gvault",
+		Short: "Manage secrets for your Google Cloud Platorm projects",
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -58,11 +73,15 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $PWD/.gvault.json)")
 	rootCmd.PersistentFlags().StringP("project", "p", "", "Google Cloud ProjectID")
 	rootCmd.PersistentFlags().StringP("keyring", "k", "", "Google KMS Keyring")
+	rootCmd.PersistentFlags().StringP("location", "l", "", "Google KMS Keyring Location (defaults to global)")
 	rootCmd.PersistentFlags().StringP("key", "", "", "Google KMS Key")
 
 	viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
 	viper.BindPFlag("keyring", rootCmd.PersistentFlags().Lookup("keyring"))
+	viper.BindPFlag("location", rootCmd.PersistentFlags().Lookup("location"))
 	viper.BindPFlag("key", rootCmd.PersistentFlags().Lookup("key"))
+
+	viper.SetDefault("location", "global")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -76,8 +95,8 @@ func initConfig() {
 	} else {
 		// Search config in home directory with name ".gvault" (without extension).
 		viper.AddConfigPath(utils.CWD())
-		viper.SetConfigName("gvaultrc")
-		// viper.SetConfigType("json")
+		viper.SetConfigName(cfgFileName)
+		viper.SetConfigType("json")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
@@ -87,4 +106,10 @@ func initConfig() {
 	// if err := viper.ReadInConfig(); err == nil {
 	// 	fmt.Println("Using config file:", viper.ConfigFileUsed())
 	// }
+	// if err := viper.ReadInConfig(); err != nil {
+	// 	fmt.Println(err)
+	// }
+	if err := rootCmd.initCrypter(); err != nil {
+		panic(err)
+	}
 }

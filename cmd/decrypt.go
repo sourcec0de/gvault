@@ -18,10 +18,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/sourcec0de/gvault/crypter"
-
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // decryptCmd represents the decrypt command
@@ -30,11 +27,7 @@ var decryptCmd = &cobra.Command{
 	Short: "Decrypt a secret",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		project := viper.GetString("project")
-		keyring := viper.GetString("keyring")
-		key := viper.GetString("key")
-
-		decrypted, err := crypter.Decrypt(project, keyring, key, args[0])
+		decrypted, err := rootCmd.crypter.Decrypt(args[0])
 
 		if err != nil {
 			log.Fatal(err)

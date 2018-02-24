@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/chzyer/readline"
@@ -34,7 +35,7 @@ var initCmd = &cobra.Command{
 	Long:  ``,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if viper.ConfigFileUsed() != "" {
-			return fmt.Errorf("This project is already initialized. gvaultrc.json already exists: %s", viper.ConfigFileUsed())
+			return fmt.Errorf("This project is already initialized. %s already exists: %s", rcFile, viper.ConfigFileUsed())
 		}
 		return nil
 	},
@@ -63,11 +64,11 @@ var initCmd = &cobra.Command{
 			"key":     key,
 		}, "", "  ")
 
-		if err := ioutil.WriteFile(filepath.Join(utils.CWD(), "gvaultrc.json"), bytes, 0744); err != nil {
+		if err := ioutil.WriteFile(filepath.Join(utils.CWD(), rcFile), bytes, os.ModePerm); err != nil {
 			panic(err)
 		}
 
-		fmt.Println("Created gvaultrc.json")
+		fmt.Printf("Created %s", rcFile)
 	},
 }
 

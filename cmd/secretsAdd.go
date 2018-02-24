@@ -1,4 +1,4 @@
-// Copyright © 2018 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2018 James Qualls https://github.com/sourcec0de
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,49 +15,37 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
-	"log"
 
 	"github.com/spf13/cobra"
 )
 
-// encryptCmd represents the encrypt command
-var encryptCmd = &cobra.Command{
-	Use:   "encrypt",
-	Short: "Encrypt a secret",
-	Long: `Prints out a base64 encoded version of the secret you provided
-
-$ gvault encrypt SUPER_AWESOME_SECRET
-> CiQAuu4Laa3N0AwXlqDy1kTCZm3YdqEtrk/mpnsuHfMEDtNxCxISPQC8LsbdMQ1fjDsiRZn2p+HsXluLGaFG1YyQvahPHDAyXAQT1snON180ODweOIeo1MzoLYYtzHMNzC7vakg=`,
+// secretsAddCmd represents the create command
+var secretsAddCmd = &cobra.Command{
+	Use:   "create",
+	Short: "A brief description of your command",
+	Long:  ``,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 1 {
-			return errors.New("requires one value to encrypt")
+		if len(args) < 1 {
+			return fmt.Errorf("must supply new gvault store name")
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-
-		encryptedData, err := rootCmd.crypter.Encrypt([]byte(args[0]))
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Println(encryptedData)
+		fmt.Printf("create new gvault store %s", args[0])
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(encryptCmd)
+	secretsCmd.AddCommand(secretsAddCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// encryptCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// secretsAddCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// encryptCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// secretsAddCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
