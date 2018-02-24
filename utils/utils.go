@@ -2,6 +2,8 @@ package utils
 
 import (
 	"os"
+
+	"github.com/chzyer/readline"
 )
 
 // CWD returns a string pointing to the current working directory
@@ -12,4 +14,10 @@ func CWD() string {
 		panic(err)
 	}
 	return cwd
+}
+
+// Ask a question as a promt
+func Ask(question string, rl *readline.Instance) (string, error) {
+	rl.SetPrompt(question)
+	return rl.Readline()
 }

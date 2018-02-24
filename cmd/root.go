@@ -76,7 +76,8 @@ func initConfig() {
 	} else {
 		// Search config in home directory with name ".gvault" (without extension).
 		viper.AddConfigPath(utils.CWD())
-		viper.SetConfigName(".gvault")
+		viper.SetConfigName("gvaultrc")
+		// viper.SetConfigType("json")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
