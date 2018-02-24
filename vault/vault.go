@@ -5,19 +5,27 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/sourcec0de/gvault/crypter"
 )
 
 // Vault a vault that stores in a json format
 type Vault struct {
 	filePath string
+	crypter  *crypter.Crypter
 	Version  string            `json:"version"`
 	Secrets  map[string]string `json:"secrets"`
 	isNew    bool
 }
 
 // SetSecret add a secret to the vault
-func (v *Vault) SetSecret(key, value string) {
-	v.Secrets[key] = value
+func (v *Vault) SetSecret(key, value string) error {
+	encValue, err := v.crypter.Encrypt([]byte(value))
+	if err != nil {
+		return err
+	}
+	v.Secrets[key] = encValue
+	return nil
 }
 
 // RemoveSecret removes a secret from the vault
@@ -41,6 +49,7 @@ func (v *Vault) Save() error {
 	if ioWriteErr := ioutil.WriteFile(v.filePath, bytes, os.ModePerm); ioWriteErr != nil {
 		return ioWriteErr
 	}
+
 	return nil
 }
 
@@ -58,10 +67,11 @@ func (v *Vault) Load() error {
 // NewVault returns a pointer to a Vault
 // if the vault does not exist on disk it will be created
 // if the vault was not newely created it will attempt to load and unmarshal it
-func NewVault(filePath string) (*Vault, error) {
+func NewVault(filePath string, crypter *crypter.Crypter) (*Vault, error) {
 
 	vault := &Vault{
 		filePath: filePath,
+		crypter:  crypter,
 		Secrets:  map[string]string{},
 	}
 

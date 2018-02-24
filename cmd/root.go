@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/sourcec0de/gvault/crypter"
@@ -110,6 +111,6 @@ func initConfig() {
 	// 	fmt.Println(err)
 	// }
 	if err := rootCmd.initCrypter(); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }

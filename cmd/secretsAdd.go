@@ -16,23 +16,35 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 // secretsAddCmd represents the create command
 var secretsAddCmd = &cobra.Command{
-	Use:   "create",
-	Short: "A brief description of your command",
+	Use:   "add",
+	Short: "Add a new secret to the vault",
 	Long:  ``,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) < 1 {
-			return fmt.Errorf("must supply new gvault store name")
+			return fmt.Errorf("must supply at least one KEY=VALUE pair")
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("create new gvault store %s", args[0])
+
+		for _, arg := range args {
+			pair := strings.Split(arg, "=")
+			if len(pair) != 2 {
+				log.Fatalf("%s is not a valid KEY=VALUE pair", arg)
+			}
+
+			secretsCmd.vault.SetSecret(pair[0], pair[1])
+		}
+
+		secretsCmd.vault.Save()
 	},
 }
 

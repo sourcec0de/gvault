@@ -16,8 +16,10 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 
+	"github.com/sourcec0de/gvault/crypter"
 	"github.com/sourcec0de/gvault/utils"
 	"github.com/sourcec0de/gvault/vault"
 	"github.com/spf13/cobra"
@@ -29,9 +31,9 @@ type secretsCmdWithVault struct {
 	vault *vault.Vault
 }
 
-func (s *secretsCmdWithVault) initVault() error {
+func (s *secretsCmdWithVault) initVault(crypter *crypter.Crypter) error {
 	vaultPath := fmt.Sprintf(filepath.Join(utils.CWD(), "gvault", viper.GetString("vault")+".json"))
-	newVault, err := vault.NewVault(vaultPath)
+	newVault, err := vault.NewVault(vaultPath, crypter)
 
 	if err != nil {
 		return err
@@ -49,16 +51,19 @@ var secretsCmd = &secretsCmdWithVault{
 	},
 }
 
+func initSecretCmd() {
+	if err := secretsCmd.initVault(rootCmd.crypter); err != nil {
+		log.Fatal(err)
+	}
+}
+
 func init() {
+	cobra.OnInitialize(initSecretCmd)
 	rootCmd.AddCommand(secretsCmd.Command)
 
 	secretsCmd.PersistentFlags().StringP("vault", "v", "", "name of a local vault")
 	viper.BindPFlag("vault", secretsCmd.PersistentFlags().Lookup("vault"))
 	viper.SetDefault("vault", "main")
-
-	if err := secretsCmd.initVault(); err != nil {
-		panic(err)
-	}
 
 	// Here you will define your flags and configuration settings.
 
