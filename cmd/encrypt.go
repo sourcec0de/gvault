@@ -17,9 +17,12 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // encryptCmd represents the encrypt command
@@ -31,25 +34,40 @@ var encryptCmd = &cobra.Command{
 $ gvault encrypt SUPER_AWESOME_SECRET
 > CiQAuu4Laa3N0AwXlqDy1kTCZm3YdqEtrk/mpnsuHfMEDtNxCxISPQC8LsbdMQ1fjDsiRZn2p+HsXluLGaFG1YyQvahPHDAyXAQT1snON180ODweOIeo1MzoLYYtzHMNzC7vakg=`,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 1 {
+		if len(args) != 1 && !viper.GetBool("stdin") {
 			return errors.New("requires one value to encrypt")
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		var plainText []byte
 
-		encryptedData, err := rootCmd.crypter.Encrypt([]byte(args[0]))
+		if viper.GetBool("stdin") {
+			bytes, err := ioutil.ReadAll(os.Stdin)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			plainText = bytes
+		} else {
+			plainText = []byte(args[0])
+		}
+
+		encryptedData, err := rootCmd.crypter.Encrypt(plainText)
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		fmt.Println(encryptedData)
+		fmt.Print(encryptedData)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(encryptCmd)
+	encryptCmd.Flags().Bool("stdin", false, "Read from stdin instead of arguments")
+	viper.BindPFlag("stdin", encryptCmd.Flags().Lookup("stdin"))
 
 	// Here you will define your flags and configuration settings.
 
