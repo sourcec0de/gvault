@@ -124,7 +124,7 @@ func (v *Vault) Load() error {
 	return nil
 }
 
-type decryptionResult struct {
+type kmsAPIResult struct {
 	key   string
 	value string
 }
@@ -132,13 +132,13 @@ type decryptionResult struct {
 // DecryptAll decrypts all secrets in this vault
 func (v *Vault) DecryptAll() error {
 	totalReq := 0
-	resultsChan := make(chan decryptionResult)
+	resultsChan := make(chan kmsAPIResult)
 
 	for name, cipherText := range v.Secrets {
 		totalReq++
 		go func(name, cipherText string) {
 			bytes, _ := v.crypter.Decrypt(cipherText)
-			resultsChan <- decryptionResult{
+			resultsChan <- kmsAPIResult{
 				key:   name,
 				value: string(bytes),
 			}
@@ -156,6 +156,44 @@ func (v *Vault) DecryptAll() error {
 	}
 
 	return nil
+}
+
+// EncryptEnvMap encrypts all secrets in a given envMap
+func (v *Vault) EncryptEnvMap(envMap map[string]string) (map[string]string, error) {
+	totalReq := 0
+	resultsChan := make(chan kmsAPIResult)
+
+	for key, plainText := range envMap {
+		totalReq++
+		go func(key, plainText string) {
+			bytes, _ := v.crypter.Encrypt([]byte(plainText))
+			resultsChan <- kmsAPIResult{
+				key:   key,
+				value: string(bytes),
+			}
+		}(key, plainText)
+	}
+
+	encryptedEnvMap := map[string]string{}
+
+	for {
+		result := <-resultsChan
+		encryptedEnvMap[result.key] = result.value
+		totalReq--
+
+		if totalReq == 0 {
+			break
+		}
+	}
+
+	return encryptedEnvMap, nil
+}
+
+// MergeEncryptedEnvMap merges an encryptedEnvMap into the secrets
+func (v *Vault) MergeEncryptedEnvMap(encryptedEnvMap map[string]string) {
+	for key, value := range encryptedEnvMap {
+		v.Secrets[key] = value
+	}
 }
 
 // NewVault returns a pointer to a Vault
