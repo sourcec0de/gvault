@@ -17,7 +17,6 @@ import (
 type Vault struct {
 	filePath  string
 	crypter   *crypter.Crypter
-	Version   string            `json:"version"`
 	Secrets   map[string]string `json:"secrets"`
 	isNew     bool
 	decrypted bool
