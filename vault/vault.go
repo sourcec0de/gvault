@@ -15,11 +15,12 @@ import (
 
 // Vault a vault that stores in a json format
 type Vault struct {
-	filePath string
-	crypter  *crypter.Crypter
-	Version  string            `json:"version"`
-	Secrets  map[string]string `json:"secrets"`
-	isNew    bool
+	filePath  string
+	crypter   *crypter.Crypter
+	Version   string            `json:"version"`
+	Secrets   map[string]string `json:"secrets"`
+	isNew     bool
+	decrypted bool
 }
 
 // SetSecret add a secret to the vault
@@ -120,6 +121,40 @@ func (v *Vault) Load() error {
 	}
 
 	json.Unmarshal(bytes, v)
+	return nil
+}
+
+type decryptionResult struct {
+	key   string
+	value string
+}
+
+// DecryptAll decrypts all secrets in this vault
+func (v *Vault) DecryptAll() error {
+	totalReq := 0
+	resultsChan := make(chan decryptionResult)
+
+	for name, cipherText := range v.Secrets {
+		totalReq++
+		go func(name, cipherText string) {
+			bytes, _ := v.crypter.Decrypt(cipherText)
+			resultsChan <- decryptionResult{
+				key:   name,
+				value: string(bytes),
+			}
+		}(name, cipherText)
+	}
+
+	for {
+		result := <-resultsChan
+		v.Secrets[result.key] = result.value
+		totalReq--
+
+		if totalReq == 0 {
+			break
+		}
+	}
+
 	return nil
 }
 

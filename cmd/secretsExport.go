@@ -27,6 +27,13 @@ var secretsExportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Export vault secrets in a secified format",
 	Run: func(cmd *cobra.Command, args []string) {
+
+		if viper.GetBool("decrypt") {
+			if err := secretsCmd.vault.DecryptAll(); err != nil {
+				log.Fatal(err)
+			}
+		}
+
 		bytes, err := secretsCmd.vault.MarshalAs(viper.GetString("format"))
 		if err != nil {
 			log.Fatal(err)
@@ -38,8 +45,11 @@ var secretsExportCmd = &cobra.Command{
 func init() {
 	secretsCmd.AddCommand(secretsExportCmd)
 
+	secretsExportCmd.Flags().Bool("decrypt", false, "Export the vault after decrypting it (default false)")
 	secretsExportCmd.Flags().String("format", "", "The format to export the vault as (json, yaml, env, shell)")
 	secretsExportCmd.MarkFlagRequired("format")
+
+	viper.BindPFlag("decrypt", secretsExportCmd.Flags().Lookup("decrypt"))
 	viper.BindPFlag("format", secretsExportCmd.Flags().Lookup("format"))
 
 	// Cobra supports local flags which will only run when this command
