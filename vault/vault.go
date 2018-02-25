@@ -6,8 +6,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ghodss/yaml"
+	"github.com/joho/godotenv"
 	"github.com/sourcec0de/gvault/crypter"
 )
 
@@ -60,6 +62,20 @@ func (v *Vault) toYAML() ([]byte, error) {
 	return yaml.Marshal(v.Secrets)
 }
 
+func (v *Vault) toENV() ([]byte, error) {
+	env, err := godotenv.Marshal(v.Secrets)
+	return []byte(env), err
+}
+
+func (v *Vault) toSHELL() ([]byte, error) {
+	var output string
+	env, err := godotenv.Marshal(v.Secrets)
+	for _, line := range strings.Split(strings.TrimSuffix(env, "\n"), "\n") {
+		output += ("export " + line + "\n")
+	}
+	return []byte(output), err
+}
+
 // MarshalAs marshals the vault secrets as the supplid format
 func (v *Vault) MarshalAs(format string) ([]byte, error) {
 	if format == "json" {
@@ -68,6 +84,14 @@ func (v *Vault) MarshalAs(format string) ([]byte, error) {
 
 	if format == "yml" || format == "yaml" {
 		return v.toYAML()
+	}
+
+	if format == "env" {
+		return v.toENV()
+	}
+
+	if format == "shell" {
+		return v.toSHELL()
 	}
 
 	return nil, fmt.Errorf("%s is not a supported vault export format", format)

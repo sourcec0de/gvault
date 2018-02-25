@@ -25,7 +25,7 @@ import (
 // secretsExportCmd represents the export command
 var secretsExportCmd = &cobra.Command{
 	Use:   "export",
-	Short: "A brief description of your command",
+	Short: "Export vault secrets in a secified format",
 	Run: func(cmd *cobra.Command, args []string) {
 		bytes, err := secretsCmd.vault.MarshalAs(viper.GetString("format"))
 		if err != nil {
@@ -38,7 +38,7 @@ var secretsExportCmd = &cobra.Command{
 func init() {
 	secretsCmd.AddCommand(secretsExportCmd)
 
-	secretsExportCmd.Flags().String("format", "", "The format to export the vault as (json, yaml)")
+	secretsExportCmd.Flags().String("format", "", "The format to export the vault as (json, yaml, env, shell)")
 	secretsExportCmd.MarkFlagRequired("format")
 	viper.BindPFlag("format", secretsExportCmd.Flags().Lookup("format"))
 
