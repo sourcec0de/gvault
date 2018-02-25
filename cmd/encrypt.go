@@ -15,41 +15,37 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
 
+	"github.com/sourcec0de/gvault/utils"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
+
+var encryptLongExample = `
+Encrypt the provided secret
+
+$ gvault encrypt SUPER_AWESOME_SECRET
+> BASE64_ENCODED_CIPHER_TEXT
+
+Alternatively, you can pass data in via STDIN
+**Note** the usage of "-" as the first argument
+
+$ cat service.json | gvault encrypt -
+> BASE64_ENCODED_CIPHER_TEXT
+`
 
 // encryptCmd represents the encrypt command
 var encryptCmd = &cobra.Command{
 	Use:   "encrypt",
 	Short: "Encrypt a secret",
-	Long: `Prints out a base64 encoded version of the secret you provided
-
-$ gvault encrypt SUPER_AWESOME_SECRET
-> CiQAuu4Laa3N0AwXlqDy1kTCZm3YdqEtrk/mpnsuHfMEDtNxCxISPQC8LsbdMQ1fjDsiRZn2p+HsXluLGaFG1YyQvahPHDAyXAQT1snON180ODweOIeo1MzoLYYtzHMNzC7vakg=`,
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 1 && !viper.GetBool("stdin") {
-			return errors.New("requires one value to encrypt")
-		}
-		return nil
-	},
+	Long:  encryptLongExample,
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var plainText []byte
 
-		if viper.GetBool("stdin") {
-			bytes, err := ioutil.ReadAll(os.Stdin)
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			plainText = bytes
+		if args[0] == "-" {
+			plainText = utils.ReadAllStdin()
 		} else {
 			plainText = []byte(args[0])
 		}
@@ -66,8 +62,8 @@ $ gvault encrypt SUPER_AWESOME_SECRET
 
 func init() {
 	rootCmd.AddCommand(encryptCmd)
-	encryptCmd.Flags().Bool("stdin", false, "Read from stdin instead of arguments")
-	viper.BindPFlag("stdin", encryptCmd.Flags().Lookup("stdin"))
+	// encryptCmd.Flags().Bool("stdin", false, "Read from stdin instead of arguments")
+	// viper.BindPFlag("stdin", encryptCmd.Flags().Lookup("stdin"))
 
 	// Here you will define your flags and configuration settings.
 

@@ -18,22 +18,46 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/sourcec0de/gvault/utils"
 	"github.com/spf13/cobra"
 )
+
+var decryptLongExample = `
+Decrypt the provided secret
+
+$ gvault decrypt BASE64_ENCODED_CIPHER_TEXT
+> SUPER_AWESOME_SECRET
+
+Alternatively, you can pass data in via STDIN
+**Note** the usage of "-" as the first argument
+
+$ echo BASE64_ENCODED_CIPHER_TEXT | gvault decrypt -
+> SUPER_AWESOME_SECRET
+`
 
 // decryptCmd represents the decrypt command
 var decryptCmd = &cobra.Command{
 	Use:   "decrypt",
 	Short: "Decrypt a secret",
-	Long:  ``,
+	Long:  decryptLongExample,
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		decrypted, err := rootCmd.crypter.Decrypt(args[0])
+
+		var cipherText string
+
+		if args[0] == "-" {
+			cipherText = string(utils.ReadAllStdin())
+		} else {
+			cipherText = args[0]
+		}
+
+		decrypted, err := rootCmd.crypter.Decrypt(cipherText)
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		fmt.Println(string(decrypted))
+		fmt.Print(string(decrypted))
 	},
 }
 
