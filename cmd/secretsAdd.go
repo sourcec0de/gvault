@@ -16,10 +16,12 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // secretsAddCmd represents the create command
@@ -28,12 +30,35 @@ var secretsAddCmd = &cobra.Command{
 	Short: "Add a new secret to the vault",
 	Long:  ``,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
+		file := viper.GetString("file")
+		name := viper.GetString("name")
+		usingFile := file != "" && name != ""
+
+		if file != "" && name == "" {
+			return fmt.Errorf("--name is required when using --file")
+		}
+
+		if len(args) < 1 && !usingFile {
 			return fmt.Errorf("must supply at least one KEY=VALUE pair")
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+
+		file := viper.GetString("file")
+		name := viper.GetString("name")
+
+		if file != "" && name != "" {
+			bytes, err := ioutil.ReadFile(viper.GetString("file"))
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			secretsCmd.vault.SetSecret(viper.GetString("name"), string(bytes))
+			secretsCmd.vault.Save()
+			return
+		}
 
 		for _, arg := range args {
 			pair := strings.Split(arg, "=")
@@ -50,6 +75,11 @@ var secretsAddCmd = &cobra.Command{
 
 func init() {
 	secretsCmd.AddCommand(secretsAddCmd)
+
+	secretsAddCmd.Flags().String("file", "", "The file to be encrypted")
+	secretsAddCmd.Flags().String("name", "", "The name of the secret being added to the vault (only works with --file)")
+	viper.BindPFlag("file", secretsAddCmd.Flags().Lookup("file"))
+	viper.BindPFlag("name", secretsAddCmd.Flags().Lookup("name"))
 
 	// Here you will define your flags and configuration settings.
 
