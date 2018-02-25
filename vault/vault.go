@@ -2,6 +2,7 @@ package vault
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -34,8 +35,20 @@ func (v *Vault) RemoveSecret(key string) {
 }
 
 // GetSecret gets a secret from the vault
-func (v *Vault) GetSecret(key string) string {
-	return v.Secrets[key]
+func (v *Vault) GetSecret(key string) (string, error) {
+
+	cipherText := v.Secrets[key]
+
+	if cipherText == "" {
+		return "", fmt.Errorf("No secret by that name")
+	}
+
+	secretBytes, err := v.crypter.Decrypt(cipherText)
+	if err != nil {
+		return "", err
+	}
+
+	return string(secretBytes), nil
 }
 
 // Save writes the vault to it's storage location
