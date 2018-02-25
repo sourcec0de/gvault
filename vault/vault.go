@@ -10,6 +10,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/joho/godotenv"
+	"github.com/mitchellh/hashstructure"
 	"github.com/sourcec0de/gvault/crypter"
 )
 
@@ -17,6 +18,7 @@ import (
 type Vault struct {
 	filePath  string
 	crypter   *crypter.Crypter
+	Version   uint64            `json:"version"`
 	Secrets   map[string]string `json:"secrets"`
 	isNew     bool
 	decrypted bool
@@ -99,6 +101,14 @@ func (v *Vault) MarshalAs(format string) ([]byte, error) {
 
 // Save writes the vault to it's storage location
 func (v *Vault) Save() error {
+
+	version, hashErr := v.HashSecrets()
+	if hashErr != nil {
+		return hashErr
+	}
+
+	v.Version = version
+
 	bytes, jsonSaveErr := json.MarshalIndent(v, "", "  ")
 
 	if jsonSaveErr != nil {
@@ -110,6 +120,13 @@ func (v *Vault) Save() error {
 	}
 
 	return nil
+}
+
+// HashSecrets generates a unique hash of the encrypted secrets
+// this is indended to be used as a version when syncronizing this with a secret store
+// like kubernetes secrets
+func (v *Vault) HashSecrets() (uint64, error) {
+	return hashstructure.Hash(v.Secrets, nil)
 }
 
 // Load a vault from a filePath
@@ -153,6 +170,8 @@ func (v *Vault) DecryptAll() error {
 			break
 		}
 	}
+
+	v.decrypted = true
 
 	return nil
 }
