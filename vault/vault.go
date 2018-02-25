@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ghodss/yaml"
 	"github.com/sourcec0de/gvault/crypter"
 )
 
@@ -49,6 +50,27 @@ func (v *Vault) GetSecret(key string) (string, error) {
 	}
 
 	return string(secretBytes), nil
+}
+
+func (v *Vault) toJSON() ([]byte, error) {
+	return json.MarshalIndent(v.Secrets, "", "  ")
+}
+
+func (v *Vault) toYAML() ([]byte, error) {
+	return yaml.Marshal(v.Secrets)
+}
+
+// MarshalAs marshals the vault secrets as the supplid format
+func (v *Vault) MarshalAs(format string) ([]byte, error) {
+	if format == "json" {
+		return v.toJSON()
+	}
+
+	if format == "yml" || format == "yaml" {
+		return v.toYAML()
+	}
+
+	return nil, fmt.Errorf("%s is not a supported vault export format", format)
 }
 
 // Save writes the vault to it's storage location
