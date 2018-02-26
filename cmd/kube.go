@@ -24,16 +24,32 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+var secretCreationFailed = "failed to create kubernetes secret in (%s) namespace"
+var kubeCmdLongExample = `
+Sync your gvault secrets with kubernetes
+
+This command will attempt to create a kubernetes Opaque secret in the provided namespace.
+If the secret already exists it will not be overwriten. This should provide an immutable way of managing secrets in kubernetes.
+Each gvault secret name will be postfixed by it's vault hash (version).
+
+The command will not exit with a fatal status code on failure.
+Do not rely on this for CI / CD environments.
+`
+
 // kubeCmd represents the kube command
 var kubeCmd = &cobra.Command{
 	Use:   "kube",
 	Short: "Sync your gvault secrets with kubernetes",
+	Long:  kubeCmdLongExample,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		namespace := viper.GetString("namespace")
 
 		// Authenticate against the cluster
 		client, err := getClient()
@@ -45,7 +61,7 @@ var kubeCmd = &cobra.Command{
 			Type: v1.SecretTypeOpaque,
 		}
 
-		secret.SetName("gvault-" + fmt.Sprintf("%v", secretsCmd.vault.Version))
+		secret.SetName(fmt.Sprintf("gvault-%v", secretsCmd.vault.Version))
 
 		if err := secretsCmd.vault.DecryptAll(); err != nil {
 			log.Fatal(err)
@@ -53,9 +69,11 @@ var kubeCmd = &cobra.Command{
 
 		secret.StringData = secretsCmd.vault.Secrets
 
-		if _, err := client.CoreV1().Secrets("default").Create(secret); err != nil {
-			log.Fatal(errors.Wrap(err, "failed to create kubernetes secret"))
+		if _, err := client.CoreV1().Secrets(namespace).Create(secret); err != nil {
+			log.Error(errors.Wrap(err, fmt.Sprintf(secretCreationFailed, namespace)))
 		}
+
+		log.Infof("Succesfully created secret (%s) in (%s) namespace", secret.GetName(), namespace)
 	},
 }
 
@@ -71,6 +89,9 @@ func getClient() (*kubernetes.Clientset, error) {
 
 func init() {
 	rootCmd.AddCommand(kubeCmd)
+	kubeCmd.Flags().StringP("namespace", "n", "", "The Kubernetes namespace to create the secret in")
+	viper.BindPFlag("namespace", kubeCmd.Flags().Lookup("namespace"))
+	viper.SetDefault("namespace", "default")
 
 	// Here you will define your flags and configuration settings.
 
