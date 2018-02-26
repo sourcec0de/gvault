@@ -16,8 +16,9 @@ package cmd
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"path/filepath"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/sourcec0de/gvault/crypter"
 	"github.com/sourcec0de/gvault/utils"
@@ -60,10 +61,6 @@ func initSecretCmd() {
 func init() {
 	cobra.OnInitialize(initSecretCmd)
 	rootCmd.AddCommand(secretsCmd.Command)
-
-	secretsCmd.PersistentFlags().StringP("vault", "v", "", "name of a local vault")
-	viper.BindPFlag("vault", secretsCmd.PersistentFlags().Lookup("vault"))
-	viper.SetDefault("vault", "main")
 
 	// Here you will define your flags and configuration settings.
 

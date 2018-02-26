@@ -77,16 +77,19 @@ func init() {
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $PWD/.gvault.json)")
 	rootCmd.PersistentFlags().StringP("project", "p", "", "Google Cloud ProjectID")
-	rootCmd.PersistentFlags().StringP("keyring", "k", "", "Google KMS Keyring")
 	rootCmd.PersistentFlags().StringP("location", "l", "", "Google KMS Keyring Location (defaults to global)")
-	rootCmd.PersistentFlags().StringP("key", "", "", "Google KMS Key")
+	rootCmd.PersistentFlags().StringP("keyring", "k", "", "Google KMS Keyring")
+	rootCmd.PersistentFlags().String("key", "", "Google KMS Key")
+	rootCmd.PersistentFlags().StringP("vault", "v", "", "The name of the vault you want to use (default to main)")
 
 	viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
-	viper.BindPFlag("keyring", rootCmd.PersistentFlags().Lookup("keyring"))
 	viper.BindPFlag("location", rootCmd.PersistentFlags().Lookup("location"))
+	viper.BindPFlag("keyring", rootCmd.PersistentFlags().Lookup("keyring"))
 	viper.BindPFlag("key", rootCmd.PersistentFlags().Lookup("key"))
+	viper.BindPFlag("vault", rootCmd.PersistentFlags().Lookup("vault"))
 
 	viper.SetDefault("location", "global")
+	viper.SetDefault("vault", "main")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
