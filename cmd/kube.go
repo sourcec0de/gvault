@@ -51,7 +51,7 @@ var kubeCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		secret.StringData = secretsCmd.vault.Base64Encode()
+		secret.StringData = secretsCmd.vault.Secrets
 
 		if _, err := client.CoreV1().Secrets("default").Create(secret); err != nil {
 			log.Fatal(errors.Wrap(err, "failed to create kubernetes secret"))
