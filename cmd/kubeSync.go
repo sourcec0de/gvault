@@ -73,6 +73,7 @@ var kubeSyncCmd = &cobra.Command{
 
 		if _, err := client.CoreV1().Secrets(namespace).Create(secret); err != nil {
 			log.Error(errors.Wrap(err, fmt.Sprintf(secretCreationFailed, namespace)))
+			return
 		}
 
 		log.Infof("Succesfully created secret (%s) in (%s) namespace", secret.GetName(), namespace)
