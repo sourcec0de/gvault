@@ -16,7 +16,7 @@ package cmd
 
 import (
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"path/filepath"
 
 	"github.com/sourcec0de/gvault/crypter"

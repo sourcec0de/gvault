@@ -15,7 +15,7 @@
 package cmd
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"

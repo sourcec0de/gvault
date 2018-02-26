@@ -16,7 +16,7 @@ package cmd
 
 import (
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/sourcec0de/gvault/utils"
 	"github.com/spf13/cobra"

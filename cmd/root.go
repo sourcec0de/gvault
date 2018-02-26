@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
+	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 
 	"os"
 
@@ -69,6 +70,7 @@ func Execute() {
 
 func init() {
 	log.SetLevel(log.WarnLevel)
+	log.SetFormatter(new(prefixed.TextFormatter))
 	cobra.OnInitialize(initConfig)
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,

@@ -17,7 +17,7 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"strings"
 
 	"github.com/spf13/cobra"
