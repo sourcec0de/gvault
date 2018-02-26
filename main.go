@@ -14,7 +14,9 @@
 
 package main
 
-import "github.com/sourcec0de/gvault/cmd"
+import (
+	"github.com/sourcec0de/gvault/cmd"
+)
 
 func main() {
 	cmd.Execute()

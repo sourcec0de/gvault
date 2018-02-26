@@ -16,7 +16,9 @@ package cmd
 
 import (
 	"fmt"
-	"log"
+
+	log "github.com/sirupsen/logrus"
+
 	"os"
 
 	"github.com/sourcec0de/gvault/crypter"
@@ -66,8 +68,8 @@ func Execute() {
 }
 
 func init() {
+	log.SetLevel(log.WarnLevel)
 	cobra.OnInitialize(initConfig)
-
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.

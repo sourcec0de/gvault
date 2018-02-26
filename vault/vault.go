@@ -1,6 +1,7 @@
 package vault
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -217,6 +218,15 @@ func (v *Vault) MergeEncryptedEnvMap(encryptedEnvMap map[string]string) {
 	for key, value := range encryptedEnvMap {
 		v.Secrets[key] = value
 	}
+}
+
+// Base64Encode encodes vault strings as base64 only useful when exporting to k8s
+func (v *Vault) Base64Encode() map[string]string {
+	results := map[string]string{}
+	for key, value := range v.Secrets {
+		results[key] = base64.StdEncoding.EncodeToString([]byte(value))
+	}
+	return results
 }
 
 // NewVault returns a pointer to a Vault
