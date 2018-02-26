@@ -69,7 +69,7 @@ func Execute() {
 }
 
 func init() {
-	log.SetLevel(log.WarnLevel)
+	log.SetLevel(log.DebugLevel)
 	log.SetFormatter(new(prefixed.TextFormatter))
 	cobra.OnInitialize(initConfig)
 	// Here you will define your flags and configuration settings.
