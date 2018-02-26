@@ -1,3 +1,4 @@
 gvault
 *gvaultrc.*
 .DS_Store
+cloudbuild.yaml

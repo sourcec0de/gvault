@@ -42,7 +42,8 @@ func NewCrypter(project, location, keyring, key string) (*Crypter, error) {
 	return crypter, nil
 }
 
-func (c *Crypter) kmsResourceName() string {
+// KmsKeyName name of the kms key
+func (c *Crypter) KmsKeyName() string {
 	return fmt.Sprintf("projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s",
 		c.project, c.location, c.keyring, c.key)
 }
@@ -50,7 +51,7 @@ func (c *Crypter) kmsResourceName() string {
 // Encrypt encrypts a secret using Google KMS
 func (c *Crypter) Encrypt(plainText []byte) (string, error) {
 	resp, err := c.kms.Projects.Locations.KeyRings.CryptoKeys.
-		Encrypt(c.kmsResourceName(), &cloudkms.EncryptRequest{
+		Encrypt(c.KmsKeyName(), &cloudkms.EncryptRequest{
 			Plaintext: base64.StdEncoding.EncodeToString(plainText),
 		}).Do()
 
@@ -64,7 +65,7 @@ func (c *Crypter) Encrypt(plainText []byte) (string, error) {
 // Decrypt decrypts a secret using Google KMS
 func (c *Crypter) Decrypt(cipherText string) ([]byte, error) {
 	resp, err := c.kms.Projects.Locations.KeyRings.CryptoKeys.
-		Decrypt(c.kmsResourceName(), &cloudkms.DecryptRequest{
+		Decrypt(c.KmsKeyName(), &cloudkms.DecryptRequest{
 			Ciphertext: cipherText,
 		}).Do()
 	if err != nil {

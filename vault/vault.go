@@ -39,6 +39,11 @@ func (v *Vault) RemoveSecret(key string) {
 	delete(v.Secrets, key)
 }
 
+// KmsKeyName name of the KMS resrouce
+func (v *Vault) KmsKeyName() string {
+	return v.crypter.KmsKeyName()
+}
+
 // GetSecret gets a secret from the vault
 func (v *Vault) GetSecret(key string) (string, error) {
 
