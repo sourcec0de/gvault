@@ -3,3 +3,4 @@ gvault
 .DS_Store
 cloudbuild.yaml
 .env
+vendor/

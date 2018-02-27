@@ -1,0 +1,36 @@
+package: github.com/sourcec0de/gvault
+import:
+- package: github.com/chzyer/readline
+  version: ~1.4.0
+- package: github.com/ghodss/yaml
+  version: ~1.0.0
+- package: github.com/joho/godotenv
+  version: ~1.2.0
+- package: github.com/mitchellh/hashstructure
+- package: github.com/pkg/errors
+  version: ~0.8.0
+- package: github.com/sirupsen/logrus
+  version: ~1.0.4
+- package: github.com/spf13/cobra
+  version: ~0.0.1
+- package: github.com/spf13/viper
+  version: ~1.0.0
+- package: github.com/x-cray/logrus-prefixed-formatter
+  version: ~0.5.2
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: golang.org/x/oauth2
+  subpackages:
+  - google
+- package: google.golang.org/api
+  subpackages:
+  - cloudkms/v1
+- package: k8s.io/api
+  subpackages:
+  - core/v1
+- package: k8s.io/client-go
+  version: ~6.0.0
+  subpackages:
+  - kubernetes
+  - tools/clientcmd
