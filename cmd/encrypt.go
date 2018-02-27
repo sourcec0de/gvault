@@ -16,9 +16,9 @@ package cmd
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/sourcec0de/gvault/utils"
+	"github.com/sourcec0de/gvault/vault"
 	"github.com/spf13/cobra"
 )
 
@@ -37,10 +37,11 @@ $ cat service.json | gvault encrypt -
 
 // encryptCmd represents the encrypt command
 var encryptCmd = &cobra.Command{
-	Use:   "encrypt",
-	Short: "Encrypt a secret",
-	Long:  encryptLongExample,
-	Args:  cobra.MinimumNArgs(1),
+	Use:     "encrypt",
+	Short:   "Encrypt a secret",
+	Long:    encryptLongExample,
+	Args:    cobra.MinimumNArgs(1),
+	PreRunE: vault.EsureVaultLoaded(gvault),
 	Run: func(cmd *cobra.Command, args []string) {
 		var plainText []byte
 
@@ -50,10 +51,10 @@ var encryptCmd = &cobra.Command{
 			plainText = []byte(args[0])
 		}
 
-		encryptedData, err := rootCmd.crypter.Encrypt(plainText)
+		encryptedData, err := gvault.Crypter.Encrypt(plainText)
 
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 
 		fmt.Print(encryptedData)

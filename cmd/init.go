@@ -15,17 +15,13 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
+
 	log "github.com/sirupsen/logrus"
-	"os"
-	"path/filepath"
 
 	"github.com/chzyer/readline"
 	"github.com/sourcec0de/gvault/utils"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // initCmd represents the init command
@@ -34,8 +30,11 @@ var initCmd = &cobra.Command{
 	Short: "Initialize a new gvault",
 	Long:  ``,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if viper.ConfigFileUsed() != "" {
-			return fmt.Errorf("This project is already initialized. %s already exists: %s", rcFile, viper.ConfigFileUsed())
+		if exists, err := gvault.Exists(); exists || err != nil {
+			if exists {
+				return fmt.Errorf("A gvault with the name (%s) already exists: %s", gvault.Name, gvault.Path())
+			}
+			return err
 		}
 		return nil
 	},
@@ -52,23 +51,23 @@ var initCmd = &cobra.Command{
 
 		project, _ := utils.Ask("Google Cloud ProjectID: ", rl)
 		keyring, _ := utils.Ask("Google KMS Keyring: ", rl)
+		location, _ := utils.Ask("Google KMS Keyring Location (defaults to global): ", rl)
 		key, _ := utils.Ask("Google KMS Key: ", rl)
 
-		if project == "" || keyring == "" || key == "" {
-			log.Fatal(fmt.Errorf("must provide an answer to all questions"))
+		if location == "" {
+			location = "global"
 		}
 
-		bytes, _ := json.MarshalIndent(map[string]string{
-			"project": project,
-			"keyring": keyring,
-			"key":     key,
-		}, "", "  ")
+		gvault.Project = project
+		gvault.Keyring = keyring
+		gvault.Location = location
+		gvault.Key = key
 
-		if err := ioutil.WriteFile(filepath.Join(utils.CWD(), rcFile), bytes, os.ModePerm); err != nil {
-			panic(err)
+		if saveErr := gvault.Save(); saveErr != nil {
+			logger.Fatal(saveErr)
 		}
 
-		fmt.Printf("Created %s", rcFile)
+		fmt.Printf("Created %s", gvault.Path())
 	},
 }
 

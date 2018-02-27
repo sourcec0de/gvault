@@ -25,8 +25,8 @@ var secretsRemoveCmd = &cobra.Command{
 	Long:  "gvault secrets remove SECRET_NAME",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		secretsCmd.vault.RemoveSecret(args[0])
-		secretsCmd.vault.Save()
+		gvault.RemoveSecret(args[0])
+		gvault.Save()
 	},
 }
 

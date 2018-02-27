@@ -17,7 +17,6 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	log "github.com/sirupsen/logrus"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -49,27 +48,31 @@ var secretsAddCmd = &cobra.Command{
 		name := viper.GetString("name")
 
 		if file != "" && name != "" {
-			bytes, err := ioutil.ReadFile(viper.GetString("file"))
+			bytes, err := ioutil.ReadFile(name)
 
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 
-			secretsCmd.vault.SetSecret(viper.GetString("name"), string(bytes))
-			secretsCmd.vault.Save()
-			return
+			if err := gvault.SetSecret(name, string(bytes)); err != nil {
+				logger.Fatal(err)
+			}
 		}
 
 		for _, arg := range args {
 			pair := strings.Split(arg, "=")
 			if len(pair) != 2 {
-				log.Fatalf("%s is not a valid KEY=VALUE pair", arg)
+				logger.Fatalf("%s is not a valid KEY=VALUE pair", arg)
 			}
 
-			secretsCmd.vault.SetSecret(pair[0], pair[1])
+			if err := gvault.SetSecret(pair[0], pair[1]); err != nil {
+				logger.Fatal(err)
+			}
 		}
 
-		secretsCmd.vault.Save()
+		if err := gvault.Save(); err != nil {
+			logger.Fatal(err)
+		}
 	},
 }
 

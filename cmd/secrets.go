@@ -15,52 +15,19 @@
 package cmd
 
 import (
-	"fmt"
-	"path/filepath"
-
-	log "github.com/sirupsen/logrus"
-
-	"github.com/sourcec0de/gvault/crypter"
-	"github.com/sourcec0de/gvault/utils"
 	"github.com/sourcec0de/gvault/vault"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-type secretsCmdWithVault struct {
-	*cobra.Command
-	vault *vault.Vault
-}
-
-func (s *secretsCmdWithVault) initVault(crypter *crypter.Crypter) error {
-	vaultPath := fmt.Sprintf(filepath.Join(utils.CWD(), "gvault", viper.GetString("vault")+".json"))
-	newVault, err := vault.NewVault(vaultPath, crypter)
-
-	if err != nil {
-		return err
-	}
-
-	s.vault = newVault
-	return nil
-}
-
 // secretsCmd represents the store command
-var secretsCmd = &secretsCmdWithVault{
-	Command: &cobra.Command{
-		Use:   "secrets",
-		Short: "Manage secrets stored in a vault",
-	},
-}
-
-func initSecretCmd() {
-	if err := secretsCmd.initVault(rootCmd.crypter); err != nil {
-		log.Fatal(err)
-	}
+var secretsCmd = &cobra.Command{
+	Use:               "secrets",
+	Short:             "Manage secrets stored in a vault",
+	PersistentPreRunE: vault.EsureVaultLoaded(gvault),
 }
 
 func init() {
-	cobra.OnInitialize(initSecretCmd)
-	rootCmd.AddCommand(secretsCmd.Command)
+	rootCmd.AddCommand(secretsCmd)
 
 	// Here you will define your flags and configuration settings.
 

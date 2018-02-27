@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -29,14 +28,14 @@ var secretsExportCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if viper.GetBool("decrypt") {
-			if err := secretsCmd.vault.DecryptAll(); err != nil {
-				log.Fatal(err)
+			if err := gvault.DecryptAll(); err != nil {
+				logger.Fatal(err)
 			}
 		}
 
-		bytes, err := secretsCmd.vault.MarshalAs(viper.GetString("format"))
+		bytes, err := gvault.MarshalAs(viper.GetString("format"))
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 		fmt.Print(string(bytes))
 	},

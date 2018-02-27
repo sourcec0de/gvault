@@ -11,20 +11,20 @@ import (
 
 // Crypter encrypt and descrypt secrets using KMS
 type Crypter struct {
-	project  string
-	location string
-	keyring  string
-	key      string
+	Project  *string
+	Location *string
+	Keyring  *string
+	Key      *string
 	kms      *cloudkms.Service
 }
 
 // NewCrypter creates a new Crypter instance
-func NewCrypter(project, location, keyring, key string) (*Crypter, error) {
+func NewCrypter(project, location, keyring, key *string) (*Crypter, error) {
 	crypter := &Crypter{
-		project:  project,
-		location: location,
-		keyring:  keyring,
-		key:      key,
+		Project:  project,
+		Location: location,
+		Keyring:  keyring,
+		Key:      key,
 	}
 
 	ctx := context.Background()
@@ -45,7 +45,7 @@ func NewCrypter(project, location, keyring, key string) (*Crypter, error) {
 // KmsKeyName name of the kms key
 func (c *Crypter) KmsKeyName() string {
 	return fmt.Sprintf("projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s",
-		c.project, c.location, c.keyring, c.key)
+		*c.Project, *c.Location, *c.Keyring, *c.Key)
 }
 
 // Encrypt encrypts a secret using Google KMS

@@ -22,41 +22,18 @@ import (
 
 	"os"
 
-	"github.com/sourcec0de/gvault/crypter"
-	"github.com/sourcec0de/gvault/utils"
+	"github.com/sourcec0de/gvault/vault"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var (
-	cfgFile     string
-	cfgFileName = ".gvaultrc"
-	rcFile      = fmt.Sprintf("%s.json", cfgFileName)
-)
-
-type rootCmdWithCrypter struct {
-	*cobra.Command
-	crypter *crypter.Crypter
-}
-
-func (r *rootCmdWithCrypter) initCrypter() error {
-	newCrypter, err := crypter.NewCrypter(viper.GetString("project"),
-		viper.GetString("location"), viper.GetString("keyring"), viper.GetString("key"))
-
-	if err != nil {
-		return err
-	}
-
-	r.crypter = newCrypter
-	return nil
-}
+var logger *log.Logger
+var gvault = vault.New(vault.Config{})
 
 // rootCmd represents the base command when called without any subcommands
-var rootCmd = &rootCmdWithCrypter{
-	Command: &cobra.Command{
-		Use:   "gvault",
-		Short: "Manage secrets for your Google Cloud Platorm projects",
-	},
+var rootCmd = &cobra.Command{
+	Use:   "gvault",
+	Short: "Manage secrets for your Google Cloud Platorm projects",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -69,55 +46,48 @@ func Execute() {
 }
 
 func init() {
-	log.SetLevel(log.DebugLevel)
-	log.SetFormatter(new(prefixed.TextFormatter))
+
+	// init cobra
 	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initVault)
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $PWD/.gvault.json)")
-	rootCmd.PersistentFlags().StringP("project", "p", "", "Google Cloud ProjectID")
-	rootCmd.PersistentFlags().StringP("location", "l", "", "Google KMS Keyring Location (defaults to global)")
-	rootCmd.PersistentFlags().StringP("keyring", "k", "", "Google KMS Keyring")
-	rootCmd.PersistentFlags().String("key", "", "Google KMS Key")
+	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug statements")
 	rootCmd.PersistentFlags().StringP("vault", "v", "", "The name of the vault you want to use (default to main)")
-
-	viper.BindPFlag("project", rootCmd.PersistentFlags().Lookup("project"))
-	viper.BindPFlag("location", rootCmd.PersistentFlags().Lookup("location"))
-	viper.BindPFlag("keyring", rootCmd.PersistentFlags().Lookup("keyring"))
-	viper.BindPFlag("key", rootCmd.PersistentFlags().Lookup("key"))
 	viper.BindPFlag("vault", rootCmd.PersistentFlags().Lookup("vault"))
-
-	viper.SetDefault("location", "global")
+	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	viper.SetDefault("vault", "main")
+	viper.SetEnvPrefix("GVAULT")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
+	// init logger
+	logger = log.New()
+	logger.Formatter = new(prefixed.TextFormatter)
+
+	if initCrypterErr := gvault.InitCrypter(); initCrypterErr != nil {
+		log.Fatal(initCrypterErr)
+	}
 }
 
-// initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Search config in home directory with name ".gvault" (without extension).
-		viper.AddConfigPath(utils.CWD())
-		viper.SetConfigName(cfgFileName)
-		viper.SetConfigType("json")
-	}
-
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.AutomaticEnv()
 	viper.ReadInConfig()
 
-	// If a config file is found, read it in.
-	// if err := viper.ReadInConfig(); err == nil {
-	// 	fmt.Println("Using config file:", viper.ConfigFileUsed())
-	// }
-	// if err := viper.ReadInConfig(); err != nil {
-	// 	fmt.Println(err)
-	// }
-	if err := rootCmd.initCrypter(); err != nil {
-		log.Fatal(err)
+	if viper.GetBool("debug") {
+		logger.SetLevel(log.DebugLevel)
+	} else {
+		logger.SetLevel(log.InfoLevel)
+	}
+}
+
+func initVault() {
+
+	gvault.Name = viper.GetString("vault")
+
+	if exists, _ := gvault.Exists(); exists {
+		if loadErr := gvault.Load(); loadErr != nil {
+			logger.Fatal(loadErr)
+		}
+		logger.Debugf("Using vault (%s)", gvault.Path())
 	}
 }

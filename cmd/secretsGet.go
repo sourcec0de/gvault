@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 )
@@ -27,9 +26,9 @@ var secretsGetCmd = &cobra.Command{
 	Short: "Retrieve and decrypt a secret from the vault",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		secret, err := secretsCmd.vault.GetSecret(args[0])
+		secret, err := gvault.GetSecret(args[0])
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 
 		fmt.Print(secret)

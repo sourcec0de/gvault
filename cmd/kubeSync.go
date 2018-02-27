@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/sourcec0de/gvault/vault"
 
 	"os"
 	"path/filepath"
@@ -46,9 +47,10 @@ Do not rely on this for CI / CD environments.
 
 // kubeCmd represents the kube command
 var kubeSyncCmd = &cobra.Command{
-	Use:   "sync",
-	Short: "Sync your gvault secrets with kubernetes",
-	Long:  kubeCmdLongExample,
+	Use:     "sync",
+	Short:   "Sync your gvault secrets with kubernetes",
+	Long:    kubeCmdLongExample,
+	PreRunE: vault.EsureVaultLoaded(gvault),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		namespace := viper.GetString("namespace")
@@ -56,20 +58,20 @@ var kubeSyncCmd = &cobra.Command{
 		// Authenticate against the cluster
 		client, err := getClient()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 
 		secret := &v1.Secret{
 			Type: v1.SecretTypeOpaque,
 		}
 
-		secret.SetName(fmt.Sprintf("gvault-%s-%v", viper.GetString("vault"), secretsCmd.vault.Version))
+		secret.SetName(fmt.Sprintf("gvault-%s-%v", viper.GetString("vault"), gvault.Version))
 
-		if err := secretsCmd.vault.DecryptAll(); err != nil {
-			log.Fatal(err)
+		if err := gvault.DecryptAll(); err != nil {
+			logger.Fatal(err)
 		}
 
-		secret.StringData = secretsCmd.vault.Secrets
+		secret.StringData = gvault.Secrets
 
 		if _, err := client.CoreV1().Secrets(namespace).Create(secret); err != nil {
 			log.Error(errors.Wrap(err, fmt.Sprintf(secretCreationFailed, namespace)))

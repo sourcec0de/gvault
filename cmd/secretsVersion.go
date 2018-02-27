@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
 )
@@ -26,9 +25,9 @@ var secretsVersionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Prints a uint64 hash of all the secrets in the vault",
 	Run: func(cmd *cobra.Command, args []string) {
-		version, err := secretsCmd.vault.HashSecrets()
+		version, err := gvault.HashSecrets()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 
 		fmt.Print(version)

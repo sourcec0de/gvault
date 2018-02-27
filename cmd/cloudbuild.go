@@ -16,9 +16,9 @@ package cmd
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/sourcec0de/gvault/cloudbuild"
+	"github.com/sourcec0de/gvault/vault"
 	"github.com/spf13/cobra"
 )
 
@@ -30,21 +30,22 @@ gvault cloudbuild >> cloudbuild.yaml
 
 // cloudbuildCmd represents the cloudbuild command
 var cloudbuildCmd = &cobra.Command{
-	Use:   "cloudbuild",
-	Short: "Export your vault in a format accepted by Google Container Builder cloudbuild.yml",
-	Long:  cloudBuildLongExample,
+	Use:     "cloudbuild",
+	Short:   "Export your vault in a format accepted by Google Container Builder cloudbuild.yml",
+	Long:    cloudBuildLongExample,
+	PreRunE: vault.EsureVaultLoaded(gvault),
 	Run: func(cmd *cobra.Command, args []string) {
 		build := cloudbuild.Build{}
 		secret := cloudbuild.Secret{
-			KmsKeyName: secretsCmd.vault.KmsKeyName(),
-			SecretEnv:  secretsCmd.vault.Secrets,
+			KmsKeyName: gvault.KmsKeyName(),
+			SecretEnv:  gvault.Secrets,
 		}
 
 		build.Secrets = append(build.Secrets, secret)
 
 		bytes, marshalErr := build.MarshalToYAML()
 		if marshalErr != nil {
-			log.Fatal(marshalErr)
+			logger.Fatal(marshalErr)
 		}
 		fmt.Println(string(bytes))
 

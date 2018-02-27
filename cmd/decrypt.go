@@ -16,9 +16,9 @@ package cmd
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/sourcec0de/gvault/utils"
+	"github.com/sourcec0de/gvault/vault"
 	"github.com/spf13/cobra"
 )
 
@@ -37,10 +37,11 @@ $ echo BASE64_ENCODED_CIPHER_TEXT | gvault decrypt -
 
 // decryptCmd represents the decrypt command
 var decryptCmd = &cobra.Command{
-	Use:   "decrypt",
-	Short: "Decrypt a secret",
-	Long:  decryptLongExample,
-	Args:  cobra.MinimumNArgs(1),
+	Use:     "decrypt",
+	Short:   "Decrypt a secret",
+	Long:    decryptLongExample,
+	Args:    cobra.MinimumNArgs(1),
+	PreRunE: vault.EsureVaultLoaded(gvault),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		var cipherText string
@@ -51,10 +52,10 @@ var decryptCmd = &cobra.Command{
 			cipherText = args[0]
 		}
 
-		decrypted, err := rootCmd.crypter.Decrypt(cipherText)
+		decrypted, err := gvault.Crypter.Decrypt(cipherText)
 
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 
 		fmt.Print(string(decrypted))

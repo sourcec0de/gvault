@@ -15,8 +15,6 @@
 package cmd
 
 import (
-	log "github.com/sirupsen/logrus"
-
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
@@ -29,11 +27,11 @@ var secretsImportCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		envMap, err := godotenv.Read(args...)
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
-		encryptedEnvMap, _ := secretsCmd.vault.EncryptEnvMap(envMap)
-		secretsCmd.vault.MergeEncryptedEnvMap(encryptedEnvMap)
-		secretsCmd.vault.Save()
+		encryptedEnvMap, _ := gvault.EncryptEnvMap(envMap)
+		gvault.MergeEncryptedEnvMap(encryptedEnvMap)
+		gvault.Save()
 	},
 }
 
